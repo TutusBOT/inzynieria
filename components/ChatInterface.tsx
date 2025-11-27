@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Image as ImageIcon, X } from "lucide-react";
+import { Send, Image as ImageIcon, X, Mic, MicOff } from "lucide-react";
 
 interface Message {
   id: string;
@@ -25,6 +25,9 @@ export default function ChatInterface({
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Speech recognition state & ref
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any | null>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -118,6 +121,72 @@ export default function ChatInterface({
       handleSendMessage();
     }
   };
+
+  // Start speech recognition
+  const startRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = navigator.language || 'pl-PL';
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onresult = (event: any) => {
+        // Combine all results into one transcript
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInputValue((prev) => {
+          // Replace input content with live transcript (do not send automatically)
+          return transcript;
+        });
+      };
+
+      recognition.onerror = (e: any) => {
+        console.error('Speech recognition error', e);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+        recognitionRef.current = null;
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Failed to start speech recognition', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.error('Error stopping recognition', err);
+      }
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-950">
@@ -220,6 +289,17 @@ export default function ChatInterface({
             className="shrink-0"
           >
             <ImageIcon size={20} />
+          </Button>
+          {/* Microphone / Record Button */}
+          <Button
+            variant={isRecording ? "destructive" : "outline"}
+            size="icon"
+            onClick={() => (isRecording ? stopRecording() : startRecording())}
+            className="shrink-0"
+            aria-pressed={isRecording}
+            title={isRecording ? 'Stop recording' : 'Start recording'}
+          >
+            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
           </Button>
           <Input
             value={inputValue}
