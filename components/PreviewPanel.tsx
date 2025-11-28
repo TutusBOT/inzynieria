@@ -1,32 +1,122 @@
 "use client";
 
-export default function PreviewPanel() {
-	return (
-		<div className="flex flex-col h-full bg-zinc-50 dark:bg-zinc-900">
-			{/* Header */}
-			<div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-				<h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-					Podgląd Interfejsu
-				</h2>
-				<p className="text-sm text-zinc-600 dark:text-zinc-400">
-					Wygenerowany interfejs pojawi się tutaj
-				</p>
-			</div>
+import { useEffect, useState } from "react";
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+	Accordion,
+	AccordionItem,
+	AccordionTrigger,
+	AccordionContent,
+} from "@/components/ui/accordion";
 
-			{/* Preview Area */}
-			<div className="flex-1 overflow-auto p-8">
-				<div className="h-full flex items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-950">
-					<div className="text-center">
-						<div className="text-6xl mb-4">🎨</div>
-						<p className="text-zinc-600 dark:text-zinc-400 text-lg font-medium">
-							Miejsce na wygenerowany interfejs
-						</p>
-						<p className="text-sm text-zinc-500 dark:text-zinc-500 mt-2">
-							Rozpocznij konwersację aby zobaczyć podgląd
-						</p>
-					</div>
+type TreeNode =
+	| { type: "text"; value: string }
+	| { type: "fragment"; children?: TreeNode[] }
+	| {
+			type: "element";
+			name: string;
+			props?: Record<string, unknown>;
+			children?: TreeNode[];
+	  };
+
+interface Message {
+	id: string;
+	role: "user" | "assistant";
+	content: string;
+	images?: string[];
+	parsedTree?: TreeNode | null;
+	parseError?: string | null;
+	tree?: TreeNode | null;
+}
+
+interface PreviewPanelProps {
+	messages: Message[];
+}
+
+export default function PreviewPanel({ messages }: PreviewPanelProps) {
+	// no direct eval/iframe: render parsed tree provided by API
+	const [parsedTree, setParsedTree] = useState<TreeNode | null>(null);
+	const [parseError, setParseError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const lastAssistant = [...messages]
+			.reverse()
+			.find(
+				(m) =>
+					m.role === "assistant" &&
+					m.content &&
+					!m.content.toLowerCase().includes("generuję interfejs")
+			);
+
+		if (!lastAssistant) {
+			setParsedTree(null);
+			setParseError(null);
+			return;
+		}
+
+		const tree = lastAssistant.parsedTree ?? lastAssistant.tree ?? null;
+		const err = lastAssistant.parseError ?? null;
+		setParsedTree(tree ?? null);
+		setParseError(err ?? null);
+	}, [messages]);
+
+	function renderNode(node: TreeNode | null): React.ReactNode {
+		if (!node) return null;
+		if (node.type === "text") return node.value;
+		if (node.type === "fragment") {
+			return (node.children || []).map((c, idx) => (
+				<React.Fragment key={idx}>{renderNode(c)}</React.Fragment>
+			));
+		}
+		if (node.type === "element") {
+			const name = node.name;
+			const props = (node.props || {}) as Record<string, unknown>;
+			const children = (node.children || []) as TreeNode[];
+
+			const compMap: Record<string, React.ElementType> = {
+				Button,
+				Input,
+				Label,
+				Checkbox,
+				Tabs,
+				"Tabs.List": TabsList,
+				"Tabs.Trigger": TabsTrigger,
+				"Tabs.Content": TabsContent,
+				Accordion,
+				"Accordion.Item": AccordionItem,
+				"Accordion.Trigger": AccordionTrigger,
+				"Accordion.Content": AccordionContent,
+			};
+
+			let tag: React.ElementType;
+			if (compMap[name]) tag = compMap[name];
+			else tag = name as unknown as React.ElementType;
+			const renderedChildren: React.ReactNode[] = children.map((c) =>
+				renderNode(c)
+			);
+
+			return React.createElement(
+				tag,
+				props as Record<string, unknown>,
+				...(renderedChildren as React.ReactNode[])
+			);
+		}
+		return null;
+	}
+
+	return (
+		<div className="flex flex-col gap-4">
+			{parseError && (
+				<div className="rounded-md border bg-muted p-4 text-sm">
+					{parseError}
 				</div>
-			</div>
+			)}
+			{!parseError && parsedTree && renderNode(parsedTree)}
 		</div>
 	);
 }

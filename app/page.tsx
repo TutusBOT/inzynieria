@@ -23,7 +23,7 @@ export default function Home() {
 
 			{/* Preview Panel - Right Side */}
 			<div className="w-1/2">
-				<PreviewPanel />
+				<PreviewPanel messages={messages} />
 			</div>
 		</div>
 	);
