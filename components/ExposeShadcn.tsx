@@ -1,64 +1,63 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-	Accordion,
-	AccordionItem,
-	AccordionTrigger,
-	AccordionContent,
-} from "@/components/ui/accordion";
+import * as UI from "@/components/ui";
+import type React from "react";
 
 export default function ExposeShadcn() {
 	useEffect(() => {
 		try {
-			// Use safer typing instead of `any`
+			// Expose the entire UI module under window.__shadcn so preview can import components by name
 			const win = window as unknown as Window & {
 				__shadcn?: Record<string, unknown>;
 			};
 
-			// Base map
-			const shadcnMap: Record<string, unknown> = {
-				Button,
-				Input,
-				Label,
-				Checkbox,
-				Tabs,
-				TabsList,
-				TabsTrigger,
-				TabsContent,
-				Accordion,
-				AccordionItem,
-				AccordionTrigger,
-				AccordionContent,
-			};
+			// Cast the imported UI barrel to a typed lookup for element types
+			const uiLib = UI as unknown as Record<string, React.ElementType>;
 
-			win.__shadcn = shadcnMap;
+			win.__shadcn = uiLib as Record<string, unknown>;
 
-			// Attach properties so code using Tabs.List or Accordion.Item works
-			const maybeTabs = (win.__shadcn?.Tabs ?? null) as unknown;
-			const maybeAccordion = (win.__shadcn?.Accordion ?? null) as unknown;
+			// Attach common subcomponent properties so patterns like Tabs.List or Accordion.Item work
+			const maybe = win.__shadcn ?? {};
 
-			if (maybeTabs && typeof maybeTabs === "function") {
-				// assign properties on the function object using unknown -> Record
-				const tabsObj = maybeTabs as unknown as Record<string, unknown>;
-				tabsObj.List = win.__shadcn?.TabsList ?? TabsList;
-				tabsObj.Trigger = win.__shadcn?.TabsTrigger ?? TabsTrigger;
-				tabsObj.Content = win.__shadcn?.TabsContent ?? TabsContent;
+			if ((maybe["Tabs"] as unknown) && typeof maybe["Tabs"] === "function") {
+				const tabsObj = maybe["Tabs"] as unknown as Record<string, unknown>;
+				tabsObj.List = maybe["TabsList"] ?? uiLib["TabsList"];
+				tabsObj.Trigger = maybe["TabsTrigger"] ?? uiLib["TabsTrigger"];
+				tabsObj.Content = maybe["TabsContent"] ?? uiLib["TabsContent"];
 			}
 
-			if (maybeAccordion && typeof maybeAccordion === "function") {
-				const accObj = maybeAccordion as unknown as Record<string, unknown>;
-				accObj.Item = win.__shadcn?.AccordionItem ?? AccordionItem;
-				accObj.Trigger = win.__shadcn?.AccordionTrigger ?? AccordionTrigger;
-				accObj.Content = win.__shadcn?.AccordionContent ?? AccordionContent;
+			if (
+				(maybe["Accordion"] as unknown) &&
+				typeof maybe["Accordion"] === "function"
+			) {
+				const accObj = maybe["Accordion"] as unknown as Record<string, unknown>;
+				accObj.Item = maybe["AccordionItem"] ?? uiLib["AccordionItem"];
+				accObj.Trigger = maybe["AccordionTrigger"] ?? uiLib["AccordionTrigger"];
+				accObj.Content = maybe["AccordionContent"] ?? uiLib["AccordionContent"];
+			}
+
+			if (
+				(maybe["Avatar"] as unknown) &&
+				typeof maybe["Avatar"] === "function"
+			) {
+				const avObj = maybe["Avatar"] as unknown as Record<string, unknown>;
+				avObj.Image = maybe["AvatarImage"] ?? uiLib["AvatarImage"];
+				avObj.Fallback = maybe["AvatarFallback"] ?? uiLib["AvatarFallback"];
+			}
+
+			if ((maybe["Card"] as unknown) && typeof maybe["Card"] === "function") {
+				const cardObj = maybe["Card"] as unknown as Record<string, unknown>;
+				cardObj.Header = maybe["CardHeader"] ?? uiLib["CardHeader"];
+				cardObj.Title = maybe["CardTitle"] ?? uiLib["CardTitle"];
+				cardObj.Description =
+					maybe["CardDescription"] ?? uiLib["CardDescription"];
+				cardObj.Content = maybe["CardContent"] ?? uiLib["CardContent"];
+				cardObj.Footer = maybe["CardFooter"] ?? uiLib["CardFooter"];
+				cardObj.Action = maybe["CardAction"] ?? uiLib["CardAction"];
 			}
 		} catch {
-			// ignore in non-browser environments
+			// ignore on server
 		}
 	}, []);
 
