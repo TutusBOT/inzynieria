@@ -13,8 +13,68 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Code2, Eye } from "lucide-react";
-
 type TreeNode =
   | { type: "text"; value: string }
   | { type: "fragment"; children?: TreeNode[] }
@@ -97,13 +157,62 @@ export default function PreviewPanel({ messages }: PreviewPanelProps) {
         Label,
         Checkbox,
         Tabs,
-        "Tabs.List": TabsList,
-        "Tabs.Trigger": TabsTrigger,
-        "Tabs.Content": TabsContent,
+        TabsList,
+        TabsTrigger,
+        TabsContent,
         Accordion,
-        "Accordion.Item": AccordionItem,
-        "Accordion.Trigger": AccordionTrigger,
-        "Accordion.Content": AccordionContent,
+        AccordionItem,
+        AccordionTrigger,
+        AccordionContent,
+        Avatar,
+        AvatarImage,
+        AvatarFallback,
+        Badge,
+        Breadcrumb,
+        BreadcrumbItem,
+        BreadcrumbLink,
+        BreadcrumbList,
+        BreadcrumbPage,
+        BreadcrumbSeparator,
+        Calendar,
+        Card,
+        CardHeader,
+        CardFooter,
+        CardTitle,
+        CardDescription,
+        CardContent,
+        Dialog,
+        DialogContent,
+        DialogDescription,
+        DialogFooter,
+        DialogHeader,
+        DialogTitle,
+        DialogTrigger,
+        Pagination,
+        PaginationContent,
+        PaginationEllipsis,
+        PaginationItem,
+        PaginationLink,
+        PaginationNext,
+        PaginationPrevious,
+        Popover,
+        PopoverContent,
+        PopoverTrigger,
+        Progress,
+        Separator,
+        Skeleton,
+        Spinner,
+        Table,
+        TableBody,
+        TableCaption,
+        TableCell,
+        TableHead,
+        TableHeader,
+        TableRow,
+        Tooltip,
+        TooltipContent,
+        TooltipProvider,
+        TooltipTrigger,
       };
 
       let tag: React.ElementType;
