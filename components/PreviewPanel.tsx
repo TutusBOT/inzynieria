@@ -74,8 +74,150 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import {
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from "@/components/ui/chart";
 import { Code2, Eye } from "lucide-react";
 import { Message } from "@/types/chat";
+
+// Interactive wrapper components with default state
+function InteractiveTabs({
+	children,
+	defaultValue,
+	value: propValue,
+	...props
+}: any) {
+	const initialValue = propValue ?? defaultValue ?? "";
+	const [value, setValue] = useState(initialValue);
+
+	return (
+		<Tabs
+			value={value}
+			onValueChange={setValue}
+			defaultValue={initialValue}
+			{...props}
+		>
+			{children}
+		</Tabs>
+	);
+}
+
+function InteractiveAccordion({
+	children,
+	type,
+	defaultValue,
+	value: propValue,
+	collapsible,
+	...props
+}: any) {
+	const initialValue = propValue ?? defaultValue ?? "";
+	const [value, setValue] = useState(initialValue);
+
+	return (
+		<Accordion
+			type={type || "single"}
+			value={value}
+			onValueChange={setValue}
+			defaultValue={initialValue}
+			collapsible={collapsible !== false}
+			{...props}
+		>
+			{children}
+		</Accordion>
+	);
+}
+
+function InteractiveDialog({
+	children,
+	open: propOpen,
+	defaultOpen,
+	...props
+}: any) {
+	const [open, setOpen] = useState(propOpen ?? defaultOpen ?? false);
+	return (
+		<Dialog open={open} onOpenChange={setOpen} {...props}>
+			{children}
+		</Dialog>
+	);
+}
+
+function InteractivePopover({
+	children,
+	open: propOpen,
+	defaultOpen,
+	...props
+}: any) {
+	const [open, setOpen] = useState(propOpen ?? defaultOpen ?? false);
+	return (
+		<Popover open={open} onOpenChange={setOpen} {...props}>
+			{children}
+		</Popover>
+	);
+}
+
+function InteractiveCalendar(props: any) {
+	const [date, setDate] = useState<Date | undefined>(new Date());
+	return (
+		<Calendar mode="single" selected={date} onSelect={setDate} {...props} />
+	);
+}
+
+function InteractiveTooltip({ children, ...props }: any) {
+	return (
+		<Tooltip delayDuration={200} {...props}>
+			{children}
+		</Tooltip>
+	);
+}
+
+function InteractiveTooltipProvider({ children, ...props }: any) {
+	return <TooltipProvider {...props}>{children}</TooltipProvider>;
+}
+
+function InteractiveChart({ children, config, ...props }: any) {
+	// Provide default config if not specified
+	const defaultConfig = config || {
+		default: {
+			label: "Value",
+			color: "hsl(var(--primary))",
+		},
+	};
+
+	// If no valid children, show placeholder
+	if (!children || (Array.isArray(children) && children.length === 0)) {
+		return (
+			<div
+				style={{
+					padding: "2rem",
+					border: "1px dashed #ccc",
+					borderRadius: "0.5rem",
+					textAlign: "center",
+				}}
+			>
+				<p style={{ color: "#666" }}>
+					Chart component requires chart children (BarChart, LineChart, etc.)
+				</p>
+			</div>
+		);
+	}
+
+	return (
+		<ChartContainer config={defaultConfig} {...props}>
+			{children}
+		</ChartContainer>
+	);
+}
 
 type TreeNode =
 	| { type: "text"; value: string }
@@ -159,11 +301,22 @@ export default function PreviewPanel({ messages }: PreviewPanelProps) {
 				Input,
 				Label,
 				Checkbox,
-				Tabs,
+				Form,
+				FormControl,
+				FormDescription,
+				FormField,
+				FormItem,
+				FormLabel,
+				FormMessage,
+				Chart: InteractiveChart,
+				ChartContainer: InteractiveChart,
+				ChartTooltip,
+				ChartTooltipContent,
+				Tabs: InteractiveTabs,
 				TabsList,
 				TabsTrigger,
 				TabsContent,
-				Accordion,
+				Accordion: InteractiveAccordion,
 				AccordionItem,
 				AccordionTrigger,
 				AccordionContent,
@@ -177,14 +330,14 @@ export default function PreviewPanel({ messages }: PreviewPanelProps) {
 				BreadcrumbList,
 				BreadcrumbPage,
 				BreadcrumbSeparator,
-				Calendar,
+				Calendar: InteractiveCalendar,
 				Card,
 				CardHeader,
 				CardFooter,
 				CardTitle,
 				CardDescription,
 				CardContent,
-				Dialog,
+				Dialog: InteractiveDialog,
 				DialogContent,
 				DialogDescription,
 				DialogFooter,
@@ -198,7 +351,7 @@ export default function PreviewPanel({ messages }: PreviewPanelProps) {
 				PaginationLink,
 				PaginationNext,
 				PaginationPrevious,
-				Popover,
+				Popover: InteractivePopover,
 				PopoverContent,
 				PopoverTrigger,
 				Progress,
@@ -212,9 +365,9 @@ export default function PreviewPanel({ messages }: PreviewPanelProps) {
 				TableHead,
 				TableHeader,
 				TableRow,
-				Tooltip,
+				Tooltip: InteractiveTooltip,
 				TooltipContent,
-				TooltipProvider,
+				TooltipProvider: InteractiveTooltipProvider,
 				TooltipTrigger,
 			};
 
@@ -280,7 +433,9 @@ export default function PreviewPanel({ messages }: PreviewPanelProps) {
 								</div>
 							) : parsedTree ? (
 								<div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900 min-h-[200px]">
-									<div className="w-full">{renderNode(parsedTree)}</div>
+									<TooltipProvider>
+										<div className="w-full">{renderNode(parsedTree)}</div>
+									</TooltipProvider>
 								</div>
 							) : (
 								<div className="text-zinc-500 dark:text-zinc-400 text-sm">
